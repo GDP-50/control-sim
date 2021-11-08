@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.12)
+project(MyProject VERSION 1.0.0)
+#set(CMAKE_TOOLCHAIN_FILE = "C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake")
+#LIST(APPEND CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x86-windows/share")
+#LIST(APPEND CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x86-windows/include")
+#LIST(APPEND CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x86-windows/lib")
+#LIST(APPEND CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x64-windows/share")
+#LIST(APPEND CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x64-windows/include")
+#LIST(APPEND CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x64-windows/lib")
+
+add_subdirectory(Graphics)
+add_subdirectory(control-sim)
