@@ -8,16 +8,22 @@
 
 #ifndef Graphics_hpp
 #define Graphics_hpp
+#define circleRes 100
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <stdio.h>
 #include <iostream>
+#include <Shaders/shader.hpp>
+#include <stdlib.h>
+#include "controls.hpp"
 
 
 namespace gfx {
     bool InitialiseGLFW();
     GLFWwindow* OpenWindow(const char * windowName, bool &windowOpened);
     void Main(GLFWwindow* window);
+    void circleVertices(GLfloat* vertexData);
 }
 #endif
