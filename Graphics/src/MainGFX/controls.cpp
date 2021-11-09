@@ -21,7 +21,7 @@ glm::mat4 getTranslationMatrix() {
 }
 
 //glm::vec3 position = glm::vec3(0,0,0); //Centered
-double speed = 5;
+double speed = 2;
 double tX, tY;
 
 void calculateTranslation(GLFWwindow* window) {
