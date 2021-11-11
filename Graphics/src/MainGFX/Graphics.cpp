@@ -82,12 +82,13 @@ void gfx::Main(GLFWwindow* window) {
     GLfloat* golfer_vertex_buffer_data = (GLfloat*)malloc(numCoords * sizeof(GLfloat));
     gfx::circleVertices(golfer_vertex_buffer_data);
 
-    GLfloat* caddy_vertex_buffer_data = (GLfloat*)malloc(numCoords * sizeof(GLfloat));
-    gfx::circleVertices(caddy_vertex_buffer_data);
+    GLfloat caddy_vertex_buffer_data[] = { 
+		-1.0, -1.0, 0.0,
+		 1.0, -1.0, 0.0,
+		 0.0,  1.0, 0.0,
+	};
 
     
-
-
 	GLuint golfer_vertexbuffer;
 	glGenBuffers(1, &golfer_vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, golfer_vertexbuffer);
@@ -95,7 +96,7 @@ void gfx::Main(GLFWwindow* window) {
 	GLuint caddy_vertexbuffer;
 	glGenBuffers(1, &caddy_vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, caddy_vertexbuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(caddy_vertex_buffer_data) * numCoords, caddy_vertex_buffer_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(caddy_vertex_buffer_data), caddy_vertex_buffer_data, GL_STATIC_DRAW);
 
     // Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
@@ -109,11 +110,15 @@ void gfx::Main(GLFWwindow* window) {
     glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
     glm::mat4 caddyInitialTranslation = glm::mat4(
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.5, 0.5, 0.0, 0.0
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, -0.5, 0, 1
         );
+    glm::mat4 caddyScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(0.05, 0.05, 0.05));
+    setCaddyInitialPosition(caddyInitialTranslation);
+    setCaddyRotationMatrix(0);
+
     
 	do{
 
@@ -145,10 +150,14 @@ void gfx::Main(GLFWwindow* window) {
 		);
 		glDrawArrays(GL_TRIANGLES, 0, numCoords); 
 		glDisableVertexAttribArray(0);
-
+        glDeleteProgram(programID);
 
         //MARK: FOR CADDY
-        glm::mat4 caddyModelMatrix = glm::scale(glm::mat4(1.0), glm::vec3(0.05, 0.05, 0.1));
+        glUseProgram(programID);
+        caddyControl();
+        glm::mat4 caddyTranslationMatrix = getCaddyTranslationMatrix();
+        glm::mat4 caddyRotationMatrix = getCaddyRotationMatrix();
+        glm::mat4 caddyModelMatrix = caddyTranslationMatrix * caddyRotationMatrix * caddyScaleMatrix;
 		MVP = caddyModelMatrix * ProjectionMatrix * ViewMatrix;
 
 		// Send our transformation to the currently bound shader, 
@@ -166,7 +175,7 @@ void gfx::Main(GLFWwindow* window) {
 			0,                  // stride
 			(void*)0            // array buffer offset
 		);
-		glDrawArrays(GL_TRIANGLES, 0, numCoords); 
+		glDrawArrays(GL_TRIANGLES, 0, 3 * 3); 
 		glDisableVertexAttribArray(0);
 
 		// Swap buffers
