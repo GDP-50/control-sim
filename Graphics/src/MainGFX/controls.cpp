@@ -13,6 +13,9 @@ glm::mat4 caddyRotationMatrix;
 glm::mat3 caddyRotationMatrix3;
 glm::vec3 caddyDirection = glm::vec3(0, 1, 0);
 double caddyRotation = 0;
+double caddySpeed = 0.03;
+
+bool timerShouldReset = false;
 
 
 glm::mat4 getTranslationMatrix() {
@@ -27,8 +30,17 @@ glm::mat4 getCaddyRotationMatrix() {
     return caddyRotationMatrix;
 }
 
-void setCaddyInitialPosition(glm::mat4 &initialPos) {
-    caddyTranslationMatrix = initialPos;
+
+void setCaddyTranslationMatrix(glm::vec3 &t) {
+    double tx = t[0];
+    double ty = t[1];
+
+    caddyTranslationMatrix = glm::mat4(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            tx, ty, 0, 1
+        );
 }
 
 double speed = 2;
@@ -59,20 +71,32 @@ void calculateTranslation(GLFWwindow* window) {
         );
 
     prevTime = glfwGetTime();
+
+    updateCaddy();
 }
 
 void caddyControl() {
+    static double prevTime = glfwGetTime();
+    if (timerShouldReset)  {
+        timerShouldReset = false;
+        prevTime = glfwGetTime();
+    }
+    double deltaTime = glfwGetTime() - prevTime;
     double pxg = translationMatrix[3][0];
     double pyg = translationMatrix[3][1];
     double pxc = caddyTranslationMatrix[3][0];
     double pyc = caddyTranslationMatrix[3][1];
     glm::vec3 golferPos = glm::vec3(pxg, pyg, 0);
     glm::vec3 caddyPos = glm::vec3(pxc, pyc, 0);
-    glm::vec3 golferPosUnit = glm::normalize(golferPos);
-    glm::vec3 chordVec = golferPos - caddyPos;
+    
+    glm::vec3 chordVec = glm::normalize(golferPos - caddyPos);
+    caddyPos += (float)(deltaTime * speed) * chordVec;
+    setCaddyTranslationMatrix(caddyPos);
+
     double angle = angleBetweenVectors(caddyDirection, chordVec);
     caddyRotation = angle;
     setCaddyRotationMatrix(caddyRotation);
+    prevTime = glfwGetTime();
 }
 
 void setCaddyRotationMatrix(double theta) {
@@ -110,4 +134,23 @@ void printVec3(glm::vec3 &vec) {
         printf("%0.2f ", vec[i]);
     }
     printf("\n");
+}
+
+void updateCaddy() {
+    double pxg = translationMatrix[3][0];
+    double pyg = translationMatrix[3][1];
+    double pxc = caddyTranslationMatrix[3][0];
+    double pyc = caddyTranslationMatrix[3][1];
+    glm::vec3 golferPos = glm::vec3(pxg, pyg, 0);
+    glm::vec3 caddyPos = glm::vec3(pxc, pyc, 0);
+
+    glm::vec3 chordVec = golferPos - caddyPos;
+    int scale = 100;
+
+    if (vec3Magnitude(chordVec) <= 0.5) {
+        timerShouldReset = true;
+        return;
+    }
+    caddyControl();
+
 }

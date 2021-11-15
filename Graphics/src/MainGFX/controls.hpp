@@ -17,10 +17,11 @@ glm::mat4 getTranslationMatrix();
 void calculateTranslation(GLFWwindow* window);
 glm::mat4 getCaddyTranslationMatrix();
 void caddyControl();
-void setCaddyInitialPosition(glm::mat4 &initialPos);
 glm::mat4 getCaddyRotationMatrix();
 double angleBetweenVectors(glm::vec3 &u, glm::vec3 &v);
 double vec3Magnitude(glm::vec3 &u);
 void setCaddyRotationMatrix(double theta);
 void printVec3(glm::vec3 &vec);
+void updateCaddy();
+void setCaddyTranslationMatrix(glm::vec3 &t);
 #endif

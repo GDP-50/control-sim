@@ -109,14 +109,9 @@ void gfx::Main(GLFWwindow* window) {
 
     glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
-    glm::mat4 caddyInitialTranslation = glm::mat4(
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, -0.5, 0, 1
-        );
+    glm::vec3 caddyInitialPosition = glm::vec3(0, -0.5, 0);
+    setCaddyTranslationMatrix(caddyInitialPosition);
     glm::mat4 caddyScaleMatrix = glm::scale(glm::mat4(1.0), glm::vec3(0.05, 0.05, 0.05));
-    setCaddyInitialPosition(caddyInitialTranslation);
     setCaddyRotationMatrix(0);
 
     
@@ -154,7 +149,6 @@ void gfx::Main(GLFWwindow* window) {
 
         //MARK: FOR CADDY
         glUseProgram(programID);
-        caddyControl();
         glm::mat4 caddyTranslationMatrix = getCaddyTranslationMatrix();
         glm::mat4 caddyRotationMatrix = getCaddyRotationMatrix();
         glm::mat4 caddyModelMatrix = caddyTranslationMatrix * caddyRotationMatrix * caddyScaleMatrix;
