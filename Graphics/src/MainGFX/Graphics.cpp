@@ -67,9 +67,6 @@ void gfx::Main(GLFWwindow* window) {
 	glGenVertexArrays(1, &golferVertexArrayID);
 	glBindVertexArray(golferVertexArrayID);
 
-    GLuint caddyVertexArrayID;
-	glGenVertexArrays(1, &caddyVertexArrayID);
-	glBindVertexArray(caddyVertexArrayID);
 
     const char* vertexPath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Graphics/src/Shaders/SimpleVertexShader.vertexshader";
     const char* fragmentPath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Graphics/src/Shaders/SimpleFragmentShader.fragmentshader";
@@ -88,14 +85,13 @@ void gfx::Main(GLFWwindow* window) {
 		 0.0,  1.0, 0.0,
 	};
 
-    
-	GLuint golfer_vertexbuffer;
-	glGenBuffers(1, &golfer_vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, golfer_vertexbuffer);
+    const int redItems = 2;
+	GLuint redVertexBuffer[redItems];
+    int redNumCoords[] = {numCoords, 9};
+	glGenBuffers(2, redVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(golfer_vertex_buffer_data) * numCoords, golfer_vertex_buffer_data, GL_STATIC_DRAW);
-	GLuint caddy_vertexbuffer;
-	glGenBuffers(1, &caddy_vertexbuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, caddy_vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(caddy_vertex_buffer_data), caddy_vertex_buffer_data, GL_STATIC_DRAW);
 
     // Get a handle for our "MVP" uniform
@@ -134,7 +130,7 @@ void gfx::Main(GLFWwindow* window) {
 
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, golfer_vertexbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[0]);
 		glVertexAttribPointer(
 			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -160,7 +156,7 @@ void gfx::Main(GLFWwindow* window) {
 
 		// 1rst attribute buffer : vertices
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, caddy_vertexbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[1]);
 		glVertexAttribPointer(
 			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 			3,                  // size
@@ -172,6 +168,8 @@ void gfx::Main(GLFWwindow* window) {
 		glDrawArrays(GL_TRIANGLES, 0, 3 * 3); 
 		glDisableVertexAttribArray(0);
 
+        //BELOW FOR STATIC GOLF COURSE STUFF
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -181,9 +179,9 @@ void gfx::Main(GLFWwindow* window) {
 		   glfwWindowShouldClose(window) == 0 );
 
 	// Cleanup VBO
-    glDeleteBuffers(1, &golfer_vertexbuffer);
+    glDeleteBuffers(1, &redVertexBuffer[0]);
 	glDeleteVertexArrays(1, &golferVertexArrayID);
-	glDeleteBuffers(1, &caddy_vertexbuffer);
+	glDeleteBuffers(1, &redVertexBuffer[1]);
 	glDeleteVertexArrays(1, &caddyVertexArrayID);
 	glDeleteProgram(programID);
 
