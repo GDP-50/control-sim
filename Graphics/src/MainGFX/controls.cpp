@@ -13,7 +13,7 @@ glm::mat4 caddyRotationMatrix;
 glm::mat3 caddyRotationMatrix3;
 glm::vec3 caddyDirection = glm::vec3(0, 1, 0);
 double caddyRotation = 0;
-double caddySpeed = 0.03;
+double caddySpeed = 0.02;
 
 bool timerShouldReset = false;
 
@@ -43,7 +43,7 @@ void setCaddyTranslationMatrix(glm::vec3 &t) {
         );
 }
 
-double speed = 2;
+double speed = 1;
 double tX, tY;
 
 void calculateTranslation(GLFWwindow* window) {

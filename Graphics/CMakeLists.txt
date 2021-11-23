@@ -8,8 +8,8 @@ add_library(
     src/Shaders/SimpleFragmentShader.fragmentshader
     src/MainGFX/controls.hpp
     src/MainGFX/controls.cpp
-    src/MainGFX/graphicClass.hpp
-    src/MainGFX/graphicClass.cpp   
+    src/MainGFX/parseCourse.hpp
+    src/MainGFX/parseCourse.cpp   
 )
 
 target_include_directories(gfx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")

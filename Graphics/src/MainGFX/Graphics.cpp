@@ -94,6 +94,16 @@ void gfx::Main(GLFWwindow* window) {
 	glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(caddy_vertex_buffer_data), caddy_vertex_buffer_data, GL_STATIC_DRAW);
 
+    //PARSE THE COURSE
+    const char* coursePath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Coordinates/green3.poly";
+    GLfloat** green;
+    int greenSize = 0;
+    GLfloat*** bunkers;
+    int bunkerCount = 0;
+    int bunkerSizes[128];
+    loadCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes);
+    
+
     // Get a handle for our "MVP" uniform
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
@@ -102,6 +112,7 @@ void gfx::Main(GLFWwindow* window) {
 				glm::vec3(0, 0, 0), // and looks here : at the same position, plus "direction"
 				glm::vec3(0, 1, 0)           // Head is up (set to 0,-1,0 to look upside-down)
 						   );
+
 
     glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
@@ -182,7 +193,6 @@ void gfx::Main(GLFWwindow* window) {
     glDeleteBuffers(1, &redVertexBuffer[0]);
 	glDeleteVertexArrays(1, &golferVertexArrayID);
 	glDeleteBuffers(1, &redVertexBuffer[1]);
-	glDeleteVertexArrays(1, &caddyVertexArrayID);
 	glDeleteProgram(programID);
 
 	// Close OpenGL window and terminate GLFW

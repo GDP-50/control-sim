@@ -18,6 +18,7 @@
 #include <Shaders/shader.hpp>
 #include <stdlib.h>
 #include "controls.hpp"
+#include "parseCourse.hpp"
 
 
 namespace gfx {
