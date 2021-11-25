@@ -28,7 +28,7 @@ def concatenate_files(hole):
                         linecount = 0
                         continue
                     linecount += 1
-                    courseMap.write(line)
+                    courseMap.write("p " + line)
 
 
 if __name__ == "__main__":

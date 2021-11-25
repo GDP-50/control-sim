@@ -95,13 +95,15 @@ void gfx::Main(GLFWwindow* window) {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(caddy_vertex_buffer_data), caddy_vertex_buffer_data, GL_STATIC_DRAW);
 
     //PARSE THE COURSE
-    const char* coursePath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Coordinates/green3.poly";
+    const char* coursePath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Coordinates/Hole 1.txt";
     GLfloat** green;
     int greenSize = 0;
     GLfloat*** bunkers;
     int bunkerCount = 0;
     int bunkerSizes[128];
-    loadCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes);
+    GLfloat tee[3];
+    loadCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee);
+    printf("tee: {%f, %f, %f}\n", tee[0],tee[1], tee[2]);
     
 
     // Get a handle for our "MVP" uniform
