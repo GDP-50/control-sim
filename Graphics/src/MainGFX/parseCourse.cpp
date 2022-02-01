@@ -11,7 +11,7 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
         getchar();
         return;
     }
-
+    int teeCount = 0;
     while( 1 ){
         static int bunkerCoordCount = 0;
         int* activeCount;
@@ -27,8 +27,11 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
             activeCount = &bunkerCoordCount;
             bunkerCount++;
             bunkerCoordCount = 0;
+        } else if (strcmp(lineHeader, "Tee") == 0) {
+            activeCount = &teeCount;
         } else if (strcmp(lineHeader, "p") == 0) {
             (*activeCount)++;
+            printf("ps found %d\n", *activeCount);
             if (activeCount == &bunkerCoordCount) {
                 bunkerSizes[bunkerCount - 1] = bunkerCoordCount;
             }
@@ -40,28 +43,19 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
     green = (GLfloat**)malloc(greenSize * sizeof(GLfloat*));
     if (!green) {
         fprintf(stderr, "Failed to allocate memory for green ptr, exiting...\n");
-        exit;
     }
     for (int i = 0; i < greenSize; i++) {
-        printf("got here %d\n", i);
+        exit;
         green[i] = (GLfloat*)calloc(3, sizeof(GLfloat));
-        printf("allocating to green[%d] 3 * %ld = %ld bytes\n", i, sizeof(GLfloat), 3 * sizeof(GLfloat));
         if (!green[i]) {
             fprintf(stderr, "Could not allocate memory for green multi-dim array, exiting...\n");
             exit(1);
         }
     }
-  
-    FILE* greenTest;
-    greenTest = fopen("greentest.txt", "w");
-    for(int i = 0; i < greenSize; i++) {
-        printf("got here 2\n");
-        fprintf(greenTest, "%lf %lf %lf\n", green[i][0], green[i][1], green[i][2]);
-    }
-    fclose(greenTest);
     
 
     bunkers = (GLfloat***)malloc(bunkerCount * sizeof(GLfloat**));
+    printf("Allocated for %d bunkers\n", bunkerCount);
     if (!bunkers) {
         fprintf(stderr, "Could not allocate memory for bunker multi-dim array, exiting...\n");
         exit;
@@ -133,6 +127,22 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
             coordCount++;
         }
     }
+    FILE* greenTest;
+    greenTest = fopen("../../greentest.txt", "w");
+    for(int i = 0; i < greenSize; i++) {
+        fprintf(greenTest, "%lf %lf %lf\n", green[i][0], green[i][1], green[i][2]);
+    }
+    fclose(greenTest);
+
+    FILE* bunkerTest;
+    bunkerTest = fopen("../../bunkertest.txt", "w");
+    for(int i = 0; i < bunkerCount; i++) {
+        fprintf(bunkerTest, "Bunker %d\n", i);
+        for(int j = 0; j < bunkerSizes[i]; j++){
+            fprintf(bunkerTest, "%f %f %f\n", bunkers[i][j][0], bunkers[i][j][1], bunkers[i][j][2]);
+        }
+    }
+    fclose(bunkerTest);
 }
 
 void prepareCourse(GLfloat** green, int greenSize, GLfloat*** bunkers, int bunkerCount, int bunkerSizes[128], GLfloat teePos[3]) {

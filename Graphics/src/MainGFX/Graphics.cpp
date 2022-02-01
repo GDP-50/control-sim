@@ -103,12 +103,7 @@ void gfx::Main(GLFWwindow* window) {
     int bunkerSizes[128];
     GLfloat tee[3];
     loadCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee);
-    /* if (!bunkers) {
-        printf("green is null\n");
-    } */
-    for (int i = 0; i < 10; i++) {
-        printf("Bunker size: %d\n", greenSize);
-    }
+
     
     
 
