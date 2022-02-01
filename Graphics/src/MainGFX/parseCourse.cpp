@@ -43,12 +43,24 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
         exit;
     }
     for (int i = 0; i < greenSize; i++) {
+        printf("got here %d\n", i);
         green[i] = (GLfloat*)calloc(3, sizeof(GLfloat));
+        printf("allocating to green[%d] 3 * %ld = %ld bytes\n", i, sizeof(GLfloat), 3 * sizeof(GLfloat));
         if (!green[i]) {
             fprintf(stderr, "Could not allocate memory for green multi-dim array, exiting...\n");
-            exit;
+            exit(1);
         }
     }
+  
+    FILE* greenTest;
+    greenTest = fopen("greentest.txt", "w");
+    for(int i = 0; i < greenSize; i++) {
+        printf("got here 2\n");
+        fprintf(greenTest, "%lf %lf %lf\n", green[i][0], green[i][1], green[i][2]);
+    }
+    fclose(greenTest);
+    
+
     bunkers = (GLfloat***)malloc(bunkerCount * sizeof(GLfloat**));
     if (!bunkers) {
         fprintf(stderr, "Could not allocate memory for bunker multi-dim array, exiting...\n");
@@ -128,6 +140,7 @@ void prepareCourse(GLfloat** green, int greenSize, GLfloat*** bunkers, int bunke
     double deg2meters = 2 * M_PI * 6371000 / 360;
     GLfloat largestVal = 0;
     //Green Relative Positions in meters
+    printf("green: %f", green[0][0]);
     for(int i = 0; i < greenSize; i++) {
         glm::vec3 greenPoint = glm::vec3(green[i][0], green[i][1], green[i][2]);
         glm::vec3 rel = tee - greenPoint;
@@ -149,13 +162,13 @@ void prepareCourse(GLfloat** green, int greenSize, GLfloat*** bunkers, int bunke
     //Find Largest Value in All arrays
     for(int i = 0; i < greenSize; i++) {
         for(int j = 0; j < 2; j++) {
-            if (abs(greenSize[i][j]) > largestVal) {
-                largestVal = abs(greenSize[i][j]);
+            if (abs(green[i][j]) > largestVal) {
+                largestVal = abs(green[i][j]);
             }
         }
     }
     for(int i = 0; i < bunkerCount; i++) {
-        for(int j = 0; j < BunkerSizes[i]; j++) {
+        for(int j = 0; j < bunkerSizes[i]; j++) {
             for(int k = 0; k < 2; k++) {
                 if (abs(bunkers[i][j][k]) > largestVal) {
                     largestVal = abs(bunkers[i][j][k]);
@@ -171,7 +184,7 @@ void prepareCourse(GLfloat** green, int greenSize, GLfloat*** bunkers, int bunke
         }
     }
     for(int i = 0; i < bunkerCount; i++) {
-        for(int j = 0; j < BunkerSizes[i]; j++) {
+        for(int j = 0; j < bunkerSizes[i]; j++) {
             for(int k = 0; k < 2; k++) {
                 bunkers[i][j][k] /= largestVal;
             }

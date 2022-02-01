@@ -103,7 +103,13 @@ void gfx::Main(GLFWwindow* window) {
     int bunkerSizes[128];
     GLfloat tee[3];
     loadCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee);
-    printf("tee: {%f, %f, %f}\n", tee[0],tee[1], tee[2]);
+    /* if (!bunkers) {
+        printf("green is null\n");
+    } */
+    for (int i = 0; i < 10; i++) {
+        printf("Bunker size: %d\n", greenSize);
+    }
+    
     
 
     // Get a handle for our "MVP" uniform
