@@ -96,15 +96,63 @@ void gfx::Main(GLFWwindow* window) {
 
     //PARSE THE COURSE
     const char* coursePath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Coordinates/Hole 1.txt";
-    GLfloat** green;
     int greenSize = 0;
-    GLfloat*** bunkers;
     int bunkerCount = 0;
     int bunkerSizes[128];
     GLfloat tee[3];
-    loadCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee);
+    loadCourse(coursePath, greenSize, bunkerCount, bunkerSizes);
 
+    GLfloat** green = (GLfloat**)malloc(greenSize * sizeof(GLfloat*));
+    if (!green) {
+        fprintf(stderr, "Failed to allocate memory for green ptr, exiting...\n");
+    }
+    for (int i = 0; i < greenSize; i++) {
+        exit;
+        green[i] = (GLfloat*)calloc(3, sizeof(GLfloat));
+        if (!green[i]) {
+            fprintf(stderr, "Could not allocate memory for green multi-dim array, exiting...\n");
+            exit(1);
+        }
+    }
     
+    GLfloat*** bunkers = (GLfloat***)malloc(bunkerCount * sizeof(GLfloat**));
+    printf("Allocated for %d bunkers\n", bunkerCount);
+    if (!bunkers) {
+        fprintf(stderr, "Could not allocate memory for bunker multi-dim array, exiting...\n");
+        exit;
+    }
+    for (int i = 0; i < bunkerCount; i++) {
+        bunkers[i] = (GLfloat**)malloc(3 * bunkerSizes[i] * sizeof(GLfloat*));
+        if (!bunkers[i]) {
+            fprintf(stderr, "Could not allocate memory for bunker multi-dim array, part 2, exiting...\n");
+            exit;
+        }
+        for (int j = 0; j < bunkerSizes[i]; j++) {
+            bunkers[i][j] = (GLfloat*)calloc(3, sizeof(GLfloat));
+            if (!bunkers[i]) {
+                fprintf(stderr, "Could not allocate memory for bunker multi-dim array, part 3, exiting...\n");
+                exit;
+            }
+        }
+    }
+
+
+    FILE* greenTest;
+    greenTest = fopen("../../greentest.txt", "w");
+    for(int i = 0; i < greenSize; i++) {
+        fprintf(greenTest, "%lf %lf %lf\n", green[i][0], green[i][1], green[i][2]);
+    }
+    fclose(greenTest);
+
+    FILE* bunkerTest;
+    bunkerTest = fopen("../../bunkertest.txt", "w");
+    for(int i = 0; i < bunkerCount; i++) {
+        fprintf(bunkerTest, "Bunker %d\n", i);
+        for(int j = 0; j < bunkerSizes[i]; j++){
+            fprintf(bunkerTest, "%f %f %f\n", bunkers[i][j][0], bunkers[i][j][1], bunkers[i][j][2]);
+        }
+    }
+    fclose(bunkerTest);
     
 
     // Get a handle for our "MVP" uniform

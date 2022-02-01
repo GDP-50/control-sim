@@ -1,6 +1,6 @@
 #include "parseCourse.hpp"
 
-void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** bunkers, int &bunkerCount, int bunkerSizes[128], GLfloat tee[3]) {
+void loadCourse(const char * path, int &greenSize, int &bunkerCount, int bunkerSizes[128]) {
     for (int* val = bunkerSizes; val < (bunkerSizes + 128); val++) {
         *val = 0;
     }
@@ -39,44 +39,16 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
         if (res == EOF) break;
     }
 
-    int greenVertexCount = 3 * greenSize;
-    green = (GLfloat**)malloc(greenSize * sizeof(GLfloat*));
-    if (!green) {
-        fprintf(stderr, "Failed to allocate memory for green ptr, exiting...\n");
-    }
-    for (int i = 0; i < greenSize; i++) {
-        exit;
-        green[i] = (GLfloat*)calloc(3, sizeof(GLfloat));
-        if (!green[i]) {
-            fprintf(stderr, "Could not allocate memory for green multi-dim array, exiting...\n");
-            exit(1);
-        }
-    }
+    fclose(file);
+
     
+   
+}
 
-    bunkers = (GLfloat***)malloc(bunkerCount * sizeof(GLfloat**));
-    printf("Allocated for %d bunkers\n", bunkerCount);
-    if (!bunkers) {
-        fprintf(stderr, "Could not allocate memory for bunker multi-dim array, exiting...\n");
-        exit;
-    }
-    for (int i = 0; i < bunkerCount; i++) {
-        bunkers[i] = (GLfloat**)malloc(3 * bunkerSizes[i] * sizeof(GLfloat*));
-        if (!bunkers[i]) {
-            fprintf(stderr, "Could not allocate memory for bunker multi-dim array, part 2, exiting...\n");
-            exit;
-        }
-        for (int j = 0; j < bunkerSizes[i]; j++) {
-            bunkers[i][j] = (GLfloat*)calloc(3, sizeof(GLfloat));
-            if (!bunkers[i]) {
-                fprintf(stderr, "Could not allocate memory for bunker multi-dim array, part 3, exiting...\n");
-                exit;
-            }
-        }
-    }
 
-    fseek(file, 0, SEEK_SET);
 
+void prepareCourse(const char * path, GLfloat** green, int greenSize, GLfloat*** bunkers, int bunkerCount, int bunkerSizes[128], GLfloat teePos[3]) {
+    FILE* file = fopen(path, "r");
     char lineHeader[128];
     bool bunkerActive = false;
     bool greenActive = false;
@@ -118,34 +90,18 @@ void loadCourse(const char * path, GLfloat** green, int &greenSize, GLfloat*** b
                 bunkers[bunker - 1][coordCount][0] = (GLfloat)c1;
                 bunkers[bunker - 1][coordCount][1] = (GLfloat)c2;
             } else if (teeActive) {
-                tee[0] = (GLfloat)c1;
-                tee[1] = (GLfloat)c2;
-                tee[2] = 0.0;
+                teePos[0] = (GLfloat)c1;
+                teePos[1] = (GLfloat)c2;
+                teePos[2] = 0.0;
             } else {
                 printf("what is going on here??? \n");
             }
             coordCount++;
         }
     }
-    FILE* greenTest;
-    greenTest = fopen("../../greentest.txt", "w");
-    for(int i = 0; i < greenSize; i++) {
-        fprintf(greenTest, "%lf %lf %lf\n", green[i][0], green[i][1], green[i][2]);
-    }
-    fclose(greenTest);
 
-    FILE* bunkerTest;
-    bunkerTest = fopen("../../bunkertest.txt", "w");
-    for(int i = 0; i < bunkerCount; i++) {
-        fprintf(bunkerTest, "Bunker %d\n", i);
-        for(int j = 0; j < bunkerSizes[i]; j++){
-            fprintf(bunkerTest, "%f %f %f\n", bunkers[i][j][0], bunkers[i][j][1], bunkers[i][j][2]);
-        }
-    }
-    fclose(bunkerTest);
-}
+    fclose(file);
 
-void prepareCourse(GLfloat** green, int greenSize, GLfloat*** bunkers, int bunkerCount, int bunkerSizes[128], GLfloat teePos[3]) {
     glm::vec3 tee = glm::vec3(teePos[0], teePos[1], teePos[2]);
     double deg2meters = 2 * M_PI * 6371000 / 360;
     GLfloat largestVal = 0;
