@@ -63,17 +63,19 @@ GLFWwindow* gfx::OpenWindow(const char * windowName, bool &windowOpened) {
 
 void gfx::Main(GLFWwindow* window) {
 
-    GLuint redVao;
-    GLuint greenVao;
-	glGenVertexArrays(1, &redVao);
-	glGenVertexArrays(1, &greenVao);
+    GLuint vao;
+	glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
 
     const char* vertexPath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Graphics/src/Shaders/SimpleVertexShader.vertexshader";
     const char* redFragmentPath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Graphics/src/Shaders/SimpleFragmentShader.fragmentshader";
     const char* greenFragmentPath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Graphics/src/Shaders/GreenFragmentShader.fragmentshader";
+    const char* beigeFragmentPath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Graphics/src/Shaders/BeigeFragmentShader.fragmentshader";
 
-    GLuint programID = LoadShaders(vertexPath, redFragmentPath);
+    GLuint redProgramID = LoadShaders(vertexPath, redFragmentPath);
     GLuint greenProgramID = LoadShaders(vertexPath, greenFragmentPath);
+    GLuint beigeProgramID = LoadShaders(vertexPath, beigeFragmentPath);
 
 	
     const int numCoords = 9 * circleRes;
@@ -119,7 +121,6 @@ void gfx::Main(GLFWwindow* window) {
     }
     
     GLfloat*** bunkers = (GLfloat***)malloc(bunkerCount * sizeof(GLfloat**));
-    printf("Allocated for %d bunkers\n", bunkerCount);
     if (!bunkers) {
         fprintf(stderr, "Could not allocate memory for bunker multi-dim array, exiting...\n");
         exit;
@@ -145,41 +146,38 @@ void gfx::Main(GLFWwindow* window) {
     greenVertexData = (GLfloat*)malloc(greenSize * 9 * sizeof(GLfloat));
     gfx::preparePolygonVertices(green, greenVertexData, greenSize);
 
-    FILE* greenTest = fopen("../../greenTestM.txt", "w");
-    for(int i = 0; i < greenSize * 9; i++){
-        fprintf(greenTest, "%f\n", greenVertexData[i]);
-    }
-    fclose(greenTest);
-
-
     //Green Buffer
     GLuint greenBuffer;
     glGenBuffers(1, &greenBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, greenBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * greenSize * 9, greenVertexData, GL_STATIC_DRAW);
+    free(greenVertexData);
 
     //Bunker Buffers
-    /* GLuint* bunkerBuffer = (GLuint*)malloc(bunkerCount * sizeof(GLuint));
+    GLfloat* bunkerVertexData;
+    GLuint* bunkerBuffer = (GLuint*)malloc(bunkerCount * sizeof(GLuint));
+    int bufferVertices;
     glGenBuffers(bunkerCount, bunkerBuffer);
     for(int i = 0; i < bunkerCount; i++) {
-        int numBufferCoords = bunkerSizes[i] * 3;
+        bufferVertices = bunkerSizes[i] * 9;
+        bunkerVertexData = (GLfloat*)malloc(bufferVertices * sizeof(GLfloat));
+        gfx::preparePolygonVertices(bunkers[i], bunkerVertexData, bunkerSizes[i]);
         glBindBuffer(GL_ARRAY_BUFFER, bunkerBuffer[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, sizeof(GLfloat) * numBufferCoords, bunkers[i], GL_STATIC_DRAW);
-    } */
+        glBufferData(GL_ARRAY_BUFFER, bufferVertices * sizeof(GLfloat), bunkerVertexData, GL_STATIC_DRAW);
+    }
 
-    /* 
-    GLuint redVertexBuffer[redItems];
-    int redNumCoords[] = {numCoords, 9};
-	glGenBuffers(2, redVertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * numCoords, golfer_vertex_buffer_data, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, redVertexBuffer[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 9, caddy_vertex_buffer_data, GL_STATIC_DRAW);
-     */
+   for(int i = 0; i < bunkerCount; i++) { 
+       for(int j = 0; j < bunkerSizes[i]; j++) {
+           free(bunkers[i][j]);
+       }
+       free(bunkers[i]);
+   }
+
 
     // Get a handle for our "MVP" uniform
-	GLuint redMatrixID = glGetUniformLocation(programID, "MVP");
+	GLuint redMatrixID = glGetUniformLocation(redProgramID, "MVP");
 	GLuint greenMatrixID = glGetUniformLocation(greenProgramID, "MVP");
+	GLuint beigeMatrixID = glGetUniformLocation(beigeProgramID, "MVP");
 
     glm::mat4 ViewMatrix = glm::lookAt(
 				glm::vec3(0, 0, -3),           // Camera is here
@@ -200,7 +198,7 @@ void gfx::Main(GLFWwindow* window) {
 		glClear( GL_COLOR_BUFFER_BIT );
 
 		// Use our shader
-		glUseProgram(programID);
+		glUseProgram(redProgramID);
 
         calculateTranslation(window);
         glm::mat4 translationMatrix = getTranslationMatrix();
@@ -208,7 +206,6 @@ void gfx::Main(GLFWwindow* window) {
 		glm::mat4 MVP = golferModelMatrix * ProjectionMatrix * ViewMatrix;
 		glUniformMatrix4fv(redMatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-        glBindVertexArray(redVao);
 
 		// Send our transformation to the currently bound shader, 
 		// in the "MVP" uniform
@@ -253,7 +250,6 @@ void gfx::Main(GLFWwindow* window) {
         glUseProgram(greenProgramID);
         MVP = ProjectionMatrix * ViewMatrix;
         glUniformMatrix4fv(greenMatrixID, 1, GL_FALSE, &MVP[0][0]);
-        glBindVertexArray(greenVao);
 
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, greenBuffer);
@@ -268,6 +264,23 @@ void gfx::Main(GLFWwindow* window) {
 		glDrawArrays(GL_TRIANGLES, 0, greenSize * 9); 
 		glDisableVertexAttribArray(0);
 
+        glUseProgram(beigeProgramID);
+        glUniformMatrix4fv(beigeMatrixID, 1, GL_FALSE, &MVP[0][0]);
+        for(int i = 0; i < bunkerCount; i++) {
+            glEnableVertexAttribArray(0);
+            glBindBuffer(GL_ARRAY_BUFFER, bunkerBuffer[i]);
+            glVertexAttribPointer(
+                0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+                3,                  // size
+                GL_FLOAT,           // type
+                GL_FALSE,           // normalized?
+                0,                  // stride
+                (void*)0            // array buffer offset
+            );
+            glDrawArrays(GL_TRIANGLES, 0, bunkerSizes[i] * 9); 
+            glDisableVertexAttribArray(0);
+        }
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -277,13 +290,16 @@ void gfx::Main(GLFWwindow* window) {
 		   glfwWindowShouldClose(window) == 0 );
 
 	// Cleanup VBO
-	glDeleteProgram(programID);
+	glDeleteProgram(redProgramID);
 	glDeleteProgram(greenProgramID);
+    glDeleteProgram(beigeProgramID);
     glDeleteBuffers(1, &redVertexBuffer[0]);
 	glDeleteBuffers(1, &redVertexBuffer[1]);
-	glDeleteVertexArrays(1, &redVao);
-	glDeleteVertexArrays(1, &greenVao);
     glDeleteBuffers(1, &greenBuffer);
+    for(int i = 0; i < bunkerCount; i++) {
+        glDeleteBuffers(1, &bunkerBuffer[i]);
+    }
+	glDeleteVertexArrays(1, &vao);
 
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
