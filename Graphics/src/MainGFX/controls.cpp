@@ -154,3 +154,80 @@ void updateCaddy() {
     caddyControl();
 
 }
+
+glm::mat4 makeTranslationMatrix(GLfloat tx, GLfloat ty) {
+    glm::mat4 tm = glm::mat4(
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        tx, ty, 0, 1
+        );
+    return tm;
+}
+
+bool rayCast(GLfloat** polygon, int m, glm::vec3 pos) {
+    GLfloat vx, vy, mag, maxXp, maxYp, minXp, minYp, px, py, eps;
+    int intersections = 0;
+    GLfloat** vecs = (GLfloat**)malloc(m * sizeof(GLfloat*));
+    GLfloat* maxX = (GLfloat*)malloc(m * sizeof(GLfloat));
+    GLfloat* maxY = (GLfloat*)malloc(m * sizeof(GLfloat));
+    GLfloat* minX = (GLfloat*)malloc(m * sizeof(GLfloat));
+    GLfloat* minY = (GLfloat*)malloc(m * sizeof(GLfloat));
+    if(!vecs) {
+        printf("Could not allocate for vecs in rayCast\n");
+        exit(1);
+    }
+    for(int i = 0; i < m; i++) {
+        vecs[i] = (GLfloat*)malloc(2 * sizeof(GLfloat));
+        if(!vecs[i]) {
+        printf("Could not allocate for vecs[%d] in rayCast\n", i);
+        exit(1);
+        }
+    }
+    for(int i = 0; i < m - 1; i++) {
+        maxXp = polygon[i + 1][0];
+        minXp = polygon[i][0];
+        maxYp = polygon[i + 1][1];
+        minYp = polygon[i][0];
+        vx = abs(maxXp - minXp);
+        vy = abs(maxYp - minYp);
+        mag = glm::sqrt(glm::pow(vx, 2.0) + glm::pow(vy, 2.0));
+        vx /= mag;
+        vy /= mag;
+        vecs[i][0] = vx;
+        vecs[i][1] = vy;
+
+        maxX[i] = (maxXp >= minXp) ? maxXp : minXp;
+        minX[i] = (minXp < maxXp) ? minXp : maxXp;
+        maxY[i] = (maxYp >= minYp) ? maxYp : minYp;
+        minY[i] = (minYp < maxYp) ? minYp : maxYp;
+    }
+    px = pos.x;
+    py = pos.y;
+    eps = 0.01;
+    
+    for(int i = 0; i < m; i++) {
+        py = (py == polygon[i][1]) ? (py + eps) : py;
+        if(py >= minY[i] && py <= maxY[i]) {
+            if(px <= maxX[i]) {
+                intersections++;
+            }
+        }
+    }
+
+    /* Free arrays */
+    for(int i = 0; i < m; i++) {
+        free(vecs[i]);
+    }
+    free(vecs);
+    free(maxX);
+    free(maxY);
+    free(minX);
+    free(minY);
+
+    if(intersections % 2 == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}

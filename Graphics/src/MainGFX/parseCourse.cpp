@@ -31,7 +31,6 @@ void loadCourse(const char * path, int &greenSize, int &bunkerCount, int bunkerS
             activeCount = &teeCount;
         } else if (strcmp(lineHeader, "p") == 0) {
             (*activeCount)++;
-            printf("ps found %d\n", *activeCount);
             if (activeCount == &bunkerCoordCount) {
                 bunkerSizes[bunkerCount - 1] = bunkerCoordCount;
             }
@@ -106,7 +105,6 @@ void prepareCourse(const char * path, GLfloat** green, int greenSize, GLfloat***
     double deg2meters = 2 * M_PI * 6371000 / 360;
     GLfloat largestVal = 0;
     //Green Relative Positions in meters
-    printf("green: %f", green[0][0]);
     for(int i = 0; i < greenSize; i++) {
         glm::vec3 greenPoint = glm::vec3(green[i][0], green[i][1], green[i][2]);
         glm::vec3 rel = tee - greenPoint;
@@ -143,19 +141,21 @@ void prepareCourse(const char * path, GLfloat** green, int greenSize, GLfloat***
         }
     }
 
-    //Scale between 0 and 1
+    //Scale between 0 and 2
+    //Then move to between 1 and -1
     for(int i = 0; i < greenSize; i++) {
         for(int j = 0; j < 2; j++) {
-            green[i][j] /= largestVal;
+            green[i][j] /= (0.5 * largestVal);
+            green[i][j] -= 1.0;
         }
     }
     for(int i = 0; i < bunkerCount; i++) {
         for(int j = 0; j < bunkerSizes[i]; j++) {
             for(int k = 0; k < 2; k++) {
-                bunkers[i][j][k] /= largestVal;
+                bunkers[i][j][k] /= (0.5 * largestVal);
+                bunkers[i][j][k] -= 1.0;
             }
         }
     }
-
     return;
 }

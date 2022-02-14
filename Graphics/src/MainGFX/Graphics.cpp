@@ -102,8 +102,10 @@ void gfx::Main(GLFWwindow* window) {
     //PARSE THE COURSE
     const char* coursePath = "/mnt/c/Users/Rufus Vijayaratnam/Documents/University/GDP/control-sim/Coordinates/Hole 1.txt";
     int greenSize = 0;
+    GLfloat greenPos[2];
     int bunkerCount = 0;
     int bunkerSizes[128];
+    GLfloat bunkerPos[128][2];
     GLfloat tee[3];
     loadCourse(coursePath, greenSize, bunkerCount, bunkerSizes);
 
@@ -140,18 +142,28 @@ void gfx::Main(GLFWwindow* window) {
         }
     }
 
+
     prepareCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee);
 
+    
     GLfloat* greenVertexData;
     greenVertexData = (GLfloat*)malloc(greenSize * 9 * sizeof(GLfloat));
-    gfx::preparePolygonVertices(green, greenVertexData, greenSize);
+    gfx::preparePolygonVertices(green, greenVertexData, greenSize, greenPos);
+    FILE* greenfile = fopen("../../greentest.txt", "w");
+    for(int i = 0; i < greenSize; i++) {
+        fprintf(greenfile, "%f %f %f\n", greenVertexData[9*i+0], greenVertexData[9*i+1], greenVertexData[9*i+2]);
+        fprintf(greenfile, "%f %f %f\n", greenVertexData[9*i+3], greenVertexData[9*i+4], greenVertexData[9*i+5]);
+        fprintf(greenfile, "%f %f %f\n", greenVertexData[9*i+6], greenVertexData[9*i+7], greenVertexData[9*i+8]);
+        fprintf(greenfile, "\n");
+    }
+
 
     //Green Buffer
     GLuint greenBuffer;
     glGenBuffers(1, &greenBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, greenBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * greenSize * 9, greenVertexData, GL_STATIC_DRAW);
-    free(greenVertexData);
+    /* free(greenVertexData); */
 
     //Bunker Buffers
     GLfloat* bunkerVertexData;
@@ -161,18 +173,18 @@ void gfx::Main(GLFWwindow* window) {
     for(int i = 0; i < bunkerCount; i++) {
         bufferVertices = bunkerSizes[i] * 9;
         bunkerVertexData = (GLfloat*)malloc(bufferVertices * sizeof(GLfloat));
-        gfx::preparePolygonVertices(bunkers[i], bunkerVertexData, bunkerSizes[i]);
+        gfx::preparePolygonVertices(bunkers[i], bunkerVertexData, bunkerSizes[i], bunkerPos[i]);
         glBindBuffer(GL_ARRAY_BUFFER, bunkerBuffer[i]);
         glBufferData(GL_ARRAY_BUFFER, bufferVertices * sizeof(GLfloat), bunkerVertexData, GL_STATIC_DRAW);
     }
 
-   for(int i = 0; i < bunkerCount; i++) { 
+   /* for(int i = 0; i < bunkerCount; i++) { 
        for(int j = 0; j < bunkerSizes[i]; j++) {
            free(bunkers[i][j]);
        }
        free(bunkers[i]);
-   }
-
+    }
+    free(bunkers); */
 
     // Get a handle for our "MVP" uniform
 	GLuint redMatrixID = glGetUniformLocation(redProgramID, "MVP");
@@ -248,7 +260,8 @@ void gfx::Main(GLFWwindow* window) {
         //BELOW FOR STATIC GOLF COURSE STUFF
         //For Green
         glUseProgram(greenProgramID);
-        MVP = ProjectionMatrix * ViewMatrix;
+        glm::mat4 greenModelMatrix = makeTranslationMatrix(greenPos[0], greenPos[1]);
+        MVP = greenModelMatrix * ProjectionMatrix * ViewMatrix;
         glUniformMatrix4fv(greenMatrixID, 1, GL_FALSE, &MVP[0][0]);
 
         glEnableVertexAttribArray(0);
@@ -265,8 +278,10 @@ void gfx::Main(GLFWwindow* window) {
 		glDisableVertexAttribArray(0);
 
         glUseProgram(beigeProgramID);
-        glUniformMatrix4fv(beigeMatrixID, 1, GL_FALSE, &MVP[0][0]);
         for(int i = 0; i < bunkerCount; i++) {
+            glm::mat4 bunkerModelMatrix = makeTranslationMatrix(bunkerPos[i][0], bunkerPos[i][1]);
+            MVP = bunkerModelMatrix * ProjectionMatrix * ViewMatrix;
+            glUniformMatrix4fv(beigeMatrixID, 1, GL_FALSE, &MVP[0][0]);
             glEnableVertexAttribArray(0);
             glBindBuffer(GL_ARRAY_BUFFER, bunkerBuffer[i]);
             glVertexAttribPointer(
@@ -280,6 +295,13 @@ void gfx::Main(GLFWwindow* window) {
             glDrawArrays(GL_TRIANGLES, 0, bunkerSizes[i] * 9); 
             glDisableVertexAttribArray(0);
         }
+
+        bool inGreen;
+        glm::vec3 golferPos = glm::vec3(translationMatrix[3][0] - greenPos[0], translationMatrix[3][1] - greenPos[1], 0.0);
+        //golferPos = glm::vec3(0.85, -0.6, 0.0);
+        printf("golfer pos, x: %f, y: %f\n", golferPos.x, golferPos.y);
+        inGreen = rayCast(green, greenSize, golferPos);
+        printf("In green: %s\n", inGreen?"true":"false");
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -328,7 +350,7 @@ void gfx::circleVertices(GLfloat* vertexData) {
     }
 }
 
-void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n) {
+void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n, GLfloat pos[2]) {
     //First calculate centroid (cx, cy) cz = 0.0
     double A, cxa, cya, cx, cy;
     double xi, yi, xip1, yip1;
@@ -347,6 +369,9 @@ void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n) {
     }
     cx = cxa / (6.0 * A);
     cy = cya / (6.0 * A);
+    printf("cx: %f, cy: %f\n", cx, cy);
+    pos[0] = cx;
+    pos[1] = cy;
 
 
     for(int i = 0; i < n - 1; i++) {
@@ -356,17 +381,26 @@ void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n) {
         x2 = prevObj[i + 1][0];
         y2 = prevObj[i + 1][1];
 
-        newObj[9 * i + 0] = cx;
-        newObj[9 * i + 1] = cy;
+        newObj[9 * i + 0] = cx - cx;
+        newObj[9 * i + 1] = cy - cy;
         newObj[9 * i + 2] = 0.0;
 
-        newObj[9 * i + 3] = x1;
-        newObj[9 * i + 4] = y1;
+        newObj[9 * i + 3] = x1 - cx;
+        newObj[9 * i + 4] = y1 - cy;
         newObj[9 * i + 5] = 0.0;
 
-        newObj[9 * i + 6] = x2;
-        newObj[9 * i + 7] = y2;
+        newObj[9 * i + 6] = x2 - cx;
+        newObj[9 * i + 7] = y2 - cy;
         newObj[9 * i + 8] = 0.0;
     }
+    newObj[9 * (n - 1) + 0] = cx - cx;
+    newObj[9 * (n - 1) + 1] = cy - cy;
+    newObj[9 * (n - 1) + 2] = 0.0;
+    newObj[9 * (n - 1) + 3] = prevObj[n - 1][0] - cx;
+    newObj[9 * (n - 1) + 4] = prevObj[n - 1][1] - cy;
+    newObj[9 * (n - 1) + 5] = 0.0;
+    newObj[9 * (n - 1) + 6] = prevObj[0][0] - cx;
+    newObj[9 * (n - 1) + 7] = prevObj[0][1] - cy;
+    newObj[9 * (n - 1) + 8] = 0.0;
 }
 

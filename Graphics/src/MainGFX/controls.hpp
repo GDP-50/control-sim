@@ -24,4 +24,6 @@ void setCaddyRotationMatrix(double theta);
 void printVec3(glm::vec3 &vec);
 void updateCaddy();
 void setCaddyTranslationMatrix(glm::vec3 &t);
+bool rayCast(GLfloat** polygon, int m, glm::vec3 pos);
+glm::mat4 makeTranslationMatrix(GLfloat tx, GLfloat ty);
 #endif
