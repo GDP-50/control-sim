@@ -26,6 +26,7 @@ namespace gfx {
     GLFWwindow* OpenWindow(const char * windowName, bool &windowOpened);
     void Main(GLFWwindow* window);
     void circleVertices(GLfloat* vertexData);
-    void preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n, GLfloat pos[2]);
+    void centrePolygon(GLfloat** polygon, int n, GLfloat pos[2]);
+    void preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n);
 }
 #endif

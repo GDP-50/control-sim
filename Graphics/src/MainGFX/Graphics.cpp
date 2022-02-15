@@ -148,7 +148,8 @@ void gfx::Main(GLFWwindow* window) {
     
     GLfloat* greenVertexData;
     greenVertexData = (GLfloat*)malloc(greenSize * 9 * sizeof(GLfloat));
-    gfx::preparePolygonVertices(green, greenVertexData, greenSize, greenPos);
+    gfx::centrePolygon(green, greenSize, greenPos);
+    gfx::preparePolygonVertices(green, greenVertexData, greenSize);
     FILE* greenfile = fopen("../../greentest.txt", "w");
     for(int i = 0; i < greenSize; i++) {
         fprintf(greenfile, "%f %f %f\n", greenVertexData[9*i+0], greenVertexData[9*i+1], greenVertexData[9*i+2]);
@@ -173,7 +174,8 @@ void gfx::Main(GLFWwindow* window) {
     for(int i = 0; i < bunkerCount; i++) {
         bufferVertices = bunkerSizes[i] * 9;
         bunkerVertexData = (GLfloat*)malloc(bufferVertices * sizeof(GLfloat));
-        gfx::preparePolygonVertices(bunkers[i], bunkerVertexData, bunkerSizes[i], bunkerPos[i]);
+        gfx::centrePolygon(bunkers[i], bunkerSizes[i], bunkerPos[i]);
+        gfx::preparePolygonVertices(bunkers[i], bunkerVertexData, bunkerSizes[i]);
         glBindBuffer(GL_ARRAY_BUFFER, bunkerBuffer[i]);
         glBufferData(GL_ARRAY_BUFFER, bufferVertices * sizeof(GLfloat), bunkerVertexData, GL_STATIC_DRAW);
     }
@@ -298,9 +300,8 @@ void gfx::Main(GLFWwindow* window) {
 
         bool inGreen;
         glm::vec3 golferPos = glm::vec3(translationMatrix[3][0] - greenPos[0], translationMatrix[3][1] - greenPos[1], 0.0);
-        //golferPos = glm::vec3(0.85, -0.6, 0.0);
-        printf("golfer pos, x: %f, y: %f\n", golferPos.x, golferPos.y);
-        inGreen = rayCast(green, greenSize, golferPos);
+        //golferPos = glm::vec3(0.0, 0.0, 0.0);
+        inGreen = inPolygon(green, greenSize, golferPos);
         printf("In green: %s\n", inGreen?"true":"false");
 
 		// Swap buffers
@@ -350,7 +351,7 @@ void gfx::circleVertices(GLfloat* vertexData) {
     }
 }
 
-void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n, GLfloat pos[2]) {
+void gfx::centrePolygon(GLfloat** polygon, int n, GLfloat pos[2]) {
     //First calculate centroid (cx, cy) cz = 0.0
     double A, cxa, cya, cx, cy;
     double xi, yi, xip1, yip1;
@@ -358,10 +359,10 @@ void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n, GLfl
     cxa = 0;
     cya = 0;
     for(int i = 0; i < n - 1; i++) {
-        xi = prevObj[i][0];
-        yi = prevObj[i][1];
-        xip1 = prevObj[i + 1][0];
-        yip1 = prevObj[i + 1][1];
+        xi = polygon[i][0];
+        yi = polygon[i][1];
+        xip1 = polygon[i + 1][0];
+        yip1 = polygon[i + 1][1];
         /* https://math.stackexchange.com/questions/3177/why-doesnt-a-simple-mean-give-the-position-of-a-centroid-in-a-polygon */
         A += 0.5 * (xi * yip1 - xip1 * yi);
         cxa += (xi + xip1) * (xi*yip1 - xip1*yi);
@@ -373,7 +374,13 @@ void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n, GLfl
     pos[0] = cx;
     pos[1] = cy;
 
+    for(int i = 0; i < n; i++) {
+        polygon[i][0] -= cx;
+        polygon[i][1] -= cy;
+    }
+}
 
+void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n) {
     for(int i = 0; i < n - 1; i++) {
         double x1, y1, x2, y2;
         x1 = prevObj[i][0];
@@ -381,26 +388,26 @@ void gfx::preparePolygonVertices(GLfloat** prevObj, GLfloat* newObj, int n, GLfl
         x2 = prevObj[i + 1][0];
         y2 = prevObj[i + 1][1];
 
-        newObj[9 * i + 0] = cx - cx;
-        newObj[9 * i + 1] = cy - cy;
+        newObj[9 * i + 0] = 0.0;
+        newObj[9 * i + 1] = 0.0;
         newObj[9 * i + 2] = 0.0;
 
-        newObj[9 * i + 3] = x1 - cx;
-        newObj[9 * i + 4] = y1 - cy;
+        newObj[9 * i + 3] = x1;
+        newObj[9 * i + 4] = y1;
         newObj[9 * i + 5] = 0.0;
 
-        newObj[9 * i + 6] = x2 - cx;
-        newObj[9 * i + 7] = y2 - cy;
+        newObj[9 * i + 6] = x2;
+        newObj[9 * i + 7] = y2;
         newObj[9 * i + 8] = 0.0;
     }
-    newObj[9 * (n - 1) + 0] = cx - cx;
-    newObj[9 * (n - 1) + 1] = cy - cy;
+    newObj[9 * (n - 1) + 0] = 0.0;
+    newObj[9 * (n - 1) + 1] = 0.0;
     newObj[9 * (n - 1) + 2] = 0.0;
-    newObj[9 * (n - 1) + 3] = prevObj[n - 1][0] - cx;
-    newObj[9 * (n - 1) + 4] = prevObj[n - 1][1] - cy;
+    newObj[9 * (n - 1) + 3] = prevObj[n - 1][0];
+    newObj[9 * (n - 1) + 4] = prevObj[n - 1][1];
     newObj[9 * (n - 1) + 5] = 0.0;
-    newObj[9 * (n - 1) + 6] = prevObj[0][0] - cx;
-    newObj[9 * (n - 1) + 7] = prevObj[0][1] - cy;
+    newObj[9 * (n - 1) + 6] = prevObj[0][0];
+    newObj[9 * (n - 1) + 7] = prevObj[0][1];
     newObj[9 * (n - 1) + 8] = 0.0;
 }
 

@@ -165,69 +165,47 @@ glm::mat4 makeTranslationMatrix(GLfloat tx, GLfloat ty) {
     return tm;
 }
 
-bool rayCast(GLfloat** polygon, int m, glm::vec3 pos) {
-    GLfloat vx, vy, mag, maxXp, maxYp, minXp, minYp, px, py, eps;
-    int intersections = 0;
-    GLfloat** vecs = (GLfloat**)malloc(m * sizeof(GLfloat*));
-    GLfloat* maxX = (GLfloat*)malloc(m * sizeof(GLfloat));
-    GLfloat* maxY = (GLfloat*)malloc(m * sizeof(GLfloat));
-    GLfloat* minX = (GLfloat*)malloc(m * sizeof(GLfloat));
-    GLfloat* minY = (GLfloat*)malloc(m * sizeof(GLfloat));
-    if(!vecs) {
-        printf("Could not allocate for vecs in rayCast\n");
-        exit(1);
-    }
-    for(int i = 0; i < m; i++) {
-        vecs[i] = (GLfloat*)malloc(2 * sizeof(GLfloat));
-        if(!vecs[i]) {
-        printf("Could not allocate for vecs[%d] in rayCast\n", i);
-        exit(1);
-        }
-    }
-    for(int i = 0; i < m - 1; i++) {
-        maxXp = polygon[i + 1][0];
-        minXp = polygon[i][0];
-        maxYp = polygon[i + 1][1];
-        minYp = polygon[i][0];
-        vx = abs(maxXp - minXp);
-        vy = abs(maxYp - minYp);
-        mag = glm::sqrt(glm::pow(vx, 2.0) + glm::pow(vy, 2.0));
-        vx /= mag;
-        vy /= mag;
-        vecs[i][0] = vx;
-        vecs[i][1] = vy;
-
-        maxX[i] = (maxXp >= minXp) ? maxXp : minXp;
-        minX[i] = (minXp < maxXp) ? minXp : maxXp;
-        maxY[i] = (maxYp >= minYp) ? maxYp : minYp;
-        minY[i] = (minYp < maxYp) ? minYp : maxYp;
-    }
+bool inPolygon(GLfloat** polygon, int m, glm::vec3 pos) {
+    GLfloat px, py;
     px = pos.x;
     py = pos.y;
-    eps = 0.01;
-    
-    for(int i = 0; i < m; i++) {
-        py = (py == polygon[i][1]) ? (py + eps) : py;
-        if(py >= minY[i] && py <= maxY[i]) {
-            if(px <= maxX[i]) {
-                intersections++;
-            }
-        }
+    int intersections;
+    intersections = 0;
+    for(int i = 0; i < m - 1; i++) {
+        rayCast(polygon, &intersections, i, i + 1, px, py);
     }
-
-    /* Free arrays */
-    for(int i = 0; i < m; i++) {
-        free(vecs[i]);
-    }
-    free(vecs);
-    free(maxX);
-    free(maxY);
-    free(minX);
-    free(minY);
-
+    rayCast(polygon, &intersections, m - 1, 0, px, py);
     if(intersections % 2 == 0) {
         return false;
     } else {
         return true;
+    }
+}
+
+void rayCast(GLfloat** polygon, int* intersections, int idxI, int idxIp1, GLfloat px, GLfloat py) {
+    GLfloat x1, x2, y1, y2, xMin, xMax, yMin, yMax;
+    x1 = polygon[idxI][0];
+    y1 = polygon[idxI][1];
+    x2 = polygon[idxIp1][0];
+    y2 = polygon[idxIp1][1];
+    minMax(&x1, &x2, &xMin, &xMax);
+    minMax(&y1, &y2, &yMin, &yMax);
+    if(px <= xMax) {
+        if(py == yMin || py == yMax) {
+            py += 0.001;
+        }
+        if(py > yMin && py < yMax) {
+            (*intersections) += 1;
+        }
+    }
+}
+
+void minMax(GLfloat* v1, GLfloat* v2, GLfloat* min, GLfloat* max) {
+    if(*v1 <= *v2) {
+        *max = *v2;
+        *min = *v1;
+    } else {
+        *max = *v1;
+        *min = *v2;
     }
 }
