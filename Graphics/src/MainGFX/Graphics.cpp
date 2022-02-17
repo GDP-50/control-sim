@@ -298,11 +298,12 @@ void gfx::Main(GLFWwindow* window) {
             glDisableVertexAttribArray(0);
         }
 
-        bool inGreen;
+        bool intersectsGreen;
         glm::vec3 golferPos = glm::vec3(translationMatrix[3][0] - greenPos[0], translationMatrix[3][1] - greenPos[1], 0.0);
-        //golferPos = glm::vec3(0.0, 0.0, 0.0);
-        inGreen = inPolygon(green, greenSize, golferPos);
-        printf("In green: %s\n", inGreen?"true":"false");
+        glm::vec3 caddyPos = glm::vec3(caddyTranslationMatrix[3][0] - greenPos[0], caddyTranslationMatrix[3][1] - greenPos[1], 0.0);
+        
+        intersectsGreen = vecPolygonIntersect(golferPos, caddyPos, green, greenSize);
+        printf("Intersects green: %s\n", intersectsGreen?"true":"false");
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -370,7 +371,6 @@ void gfx::centrePolygon(GLfloat** polygon, int n, GLfloat pos[2]) {
     }
     cx = cxa / (6.0 * A);
     cy = cya / (6.0 * A);
-    printf("cx: %f, cy: %f\n", cx, cy);
     pos[0] = cx;
     pos[1] = cy;
 

@@ -201,11 +201,90 @@ void rayCast(GLfloat** polygon, int* intersections, int idxI, int idxIp1, GLfloa
 }
 
 void minMax(GLfloat* v1, GLfloat* v2, GLfloat* min, GLfloat* max) {
+    GLfloat temp;
     if(*v1 <= *v2) {
         *max = *v2;
         *min = *v1;
     } else {
+        temp = *v2;
         *max = *v1;
-        *min = *v2;
+        *min = temp;
+    }
+}
+void Max(GLfloat* v1, GLfloat* v2, GLfloat* max) {
+    *max = (*v1 <= *v2) ? *v2 : *v1; 
+}
+void Min(GLfloat* v1, GLfloat* v2, GLfloat* min) {
+    *min = (*v1 <= *v2) ? *v1 : *v2; 
+}
+
+bool vecPolygonIntersect(glm::vec3 golferPos, glm::vec3 caddyPos, GLfloat** polygon, int n) {
+    for(int i = 0; i < n - 1; i++) {
+        if(segmentIntersection(golferPos, caddyPos, i, i + 1, polygon)) return true;
+    }
+    return false;
+}
+
+bool segmentIntersection(glm::vec3 golferPos, glm::vec3 caddyPos, int idxI, int idxIp1, GLfloat** polygon) {
+    /* Vector a is caddy to golfer, vector b is polygon edge */
+    /* x and y are the intersection point of the line segments */
+    GLfloat x, y, ax1, ax2, ay1, ay2, bx1, bx2, by1, by2;
+    GLfloat grad_a, grad_b;
+    GLfloat ac, bc;
+    GLfloat minX, maxX, minY, maxY;
+    ax1 = caddyPos.x; ay1 = caddyPos.y;
+    ax2 = golferPos.x; ay2 = golferPos.y;
+    bx1 = polygon[idxI][0]; by1 = polygon[idxI][1];
+    bx2 = polygon[idxIp1][0]; by2 = polygon[idxIp1][1];
+
+    /* First check that segments aren't parallel */
+    grad_a = (ay2 - ay1) / (ax2 - ax1);
+    grad_b = (by2 - by1) / (bx2 - bx1);
+    //printf("grad a: %f, grad b: %f\n", grad_a, grad_b);
+    ac = ay1 - grad_a * ax1;
+    bc = by1 - grad_b * bx1;
+    if(isinf(abs(grad_a)) && isinf(abs(grad_b))) return false;
+    if(grad_a == grad_b) {
+        /* We also have to consider that they might be collienar, they are if c i.e y = mc + c is equal for both*/
+        printf("were parallel\n");
+        if(ac == bc)  {
+            printf("collinear\n");
+            return true;
+        } else {
+            return false;
+        } 
+    }
+    /* printf("idxI: %d, idxIp1: %d\n", idxI, idxIp1);
+    if(isnan(grad_b)) {
+        printf("was nan\n");
+        printf("by2: %f, by1: %f, bx2: %f, bx1: %f\n", by2, by1, bx2, bx1);
+    } */
+
+    /* Expressions for x and y can be obtained by solving:
+    Eq1: 0 = (ay2 - ay1) / (ax2 - ax1) * (x - ax1) + ay1 - y
+    Eq2: 0 = (by2 - by1) / (bx2 - bx1) * (x - bx1) + by1 - y
+    Eq1 and Eq2 can be derived from y = mx + c
+    */
+    x = (ax1*ay2*bx1 - ax1*ay2*bx2 - ax1*bx1*by2 + ax1*bx2*by1 - ax2*ay1*bx1 + ax2*ay1*bx2 + ax2*bx1*by2 - ax2*bx2*by1)/(ax1*by1 - ax1*by2 - ax2*by1 + ax2*by2 - ay1*bx1 + ay1*bx2 + ay2*bx1 - ay2*bx2);
+    y = (ax1*ay2*by1 - ax1*ay2*by2 - ax2*ay1*by1 + ax2*ay1*by2 - ay1*bx1*by2 + ay1*bx2*by1 + ay2*bx1*by2 - ay2*bx2*by1)/(ax1*by1 - ax1*by2 - ax2*by1 + ax2*by2 - ay1*bx1 + ay1*bx2 + ay2*bx1 - ay2*bx2);
+    /* Set valid intersection region
+    This must be done after calculating x and y because a and b vec values are modified
+    */
+    /* sets smaller value to 1 index and larger value to 2 index*/
+    minMax(&ax1, &ax2, &ax1, &ax2);
+    minMax(&bx1, &bx2, &bx1, &bx2);
+    minMax(&ay1, &ay2, &ay1, &ay2);
+    minMax(&by1, &by2, &by1, &by2);
+    /* Set intersectino region min/max x/y  */
+    Max(&ax1, &bx1, &minX);//Min x = largest of ax1 and bx1
+    Min(&ax2, &bx2, &maxX);//max x = smallest of ax2 and bx2
+    Max(&ay1, &by1, &minY);
+    Min(&ay2, &by2, &maxY);
+    
+    if(x >= minX && x <= maxX && y >= minY && y <= maxY) {
+        printf("Valid intersection\n");
+        return true;
+    } else {
+        return false;
     }
 }

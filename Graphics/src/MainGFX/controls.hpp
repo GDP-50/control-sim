@@ -28,4 +28,9 @@ bool inPolygon(GLfloat** polygon, int m, glm::vec3 pos);
 void rayCast(GLfloat** polygon, int* intersections, int idxI, int idxIp1,GLfloat px, GLfloat py);
 glm::mat4 makeTranslationMatrix(GLfloat tx, GLfloat ty);
 void minMax(GLfloat* v1, GLfloat* v2, GLfloat* min, GLfloat* max);
+void Max(GLfloat* v1, GLfloat* v2, GLfloat* max);
+void Min(GLfloat* v1, GLfloat* v2, GLfloat* min);
+void pathfind(GLfloat gx, GLfloat gy, GLfloat cx, GLfloat cy, GLfloat path[3][2]);
+bool vecPolygonIntersect(glm::vec3 golferPos, glm::vec3 caddyPos, GLfloat** polygon, int n);
+bool segmentIntersection(glm::vec3 golferPos, glm::vec3 caddyPos, int idxI, int IdxIp1, GLfloat** polygon);
 #endif
