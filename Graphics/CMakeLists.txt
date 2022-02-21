@@ -12,6 +12,7 @@ add_library(
     src/MainGFX/parseCourse.cpp   
     src/MainGFX/UserControls.hpp
     src/MainGFX/UserControls.cpp   
+    src/MainGFX/Polygons.hpp
 )
 
 target_include_directories(gfx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")

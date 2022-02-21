@@ -146,6 +146,7 @@ void gfx::Main(GLFWwindow* window) {
     }
 
 
+
     prepareCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee, &scaleVal);
     setScaleVal(scaleVal);
     
@@ -183,13 +184,23 @@ void gfx::Main(GLFWwindow* window) {
         glBufferData(GL_ARRAY_BUFFER, bufferVertices * sizeof(GLfloat), bunkerVertexData, GL_STATIC_DRAW);
     }
 
-   /* for(int i = 0; i < bunkerCount; i++) { 
-       for(int j = 0; j < bunkerSizes[i]; j++) {
-           free(bunkers[i][j]);
-       }
-       free(bunkers[i]);
+   /* Fill an array to be used for all bunkers */
+   /* Create an array to store all centroids and sizes format [cx][cy][size] */
+    polygons = (GLfloat***)malloc((bunkerCount + 1) * sizeof(GLfloat**));
+    polyInfo = (GLfloat**)malloc((bunkerCount + 1) * sizeof(GLfloat*));
+    for(int i = 0; i < bunkerCount; i++) {
+       polygons[i] = bunkers[i];
+       polyInfo[i] = (GLfloat*)malloc(3 * sizeof(GLfloat));
+       polyInfo[i][0] = bunkerPos[i][0];
+       polyInfo[i][1] = bunkerPos[i][1];
+       polyInfo[i][2] = bunkerSizes[i];
     }
-    free(bunkers); */
+    polygons[bunkerCount] = green;
+    polyInfo[i][0] = greenPos[0];
+    polyInfo[i][1] = greenPos[1];
+    polyInfo[i][2] = greenSize;
+   
+   
 
     // Get a handle for our "MVP" uniform
 	GLuint redMatrixID = glGetUniformLocation(redProgramID, "MVP");
