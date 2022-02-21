@@ -51,7 +51,7 @@ GLFWwindow* gfx::OpenWindow(const char * windowName, bool &windowOpened) {
     }
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetMouseButtonCallback(window, clickCallback);
     glfwPollEvents();
     //glfwSetCursorPos(window, 1024 / 2, 720 / 2);
 
@@ -62,6 +62,8 @@ GLFWwindow* gfx::OpenWindow(const char * windowName, bool &windowOpened) {
 }
 
 void gfx::Main(GLFWwindow* window) {
+
+
 
     GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -107,6 +109,7 @@ void gfx::Main(GLFWwindow* window) {
     int bunkerSizes[128];
     GLfloat bunkerPos[128][2];
     GLfloat tee[3];
+    GLfloat scaleVal;
     loadCourse(coursePath, greenSize, bunkerCount, bunkerSizes);
 
     GLfloat** green = (GLfloat**)malloc(greenSize * sizeof(GLfloat*));
@@ -143,8 +146,8 @@ void gfx::Main(GLFWwindow* window) {
     }
 
 
-    prepareCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee);
-
+    prepareCourse(coursePath, green, greenSize, bunkers, bunkerCount, bunkerSizes, tee, &scaleVal);
+    setScaleVal(scaleVal);
     
     GLfloat* greenVertexData;
     greenVertexData = (GLfloat*)malloc(greenSize * 9 * sizeof(GLfloat));
@@ -300,11 +303,9 @@ void gfx::Main(GLFWwindow* window) {
 
         bool intersectsGreen;
         glm::vec3 golferPos = glm::vec3(translationMatrix[3][0] - greenPos[0], translationMatrix[3][1] - greenPos[1], 0.0);
-        glm::vec3 caddyPos = glm::vec3(caddyTranslationMatrix[3][0] - greenPos[0], caddyTranslationMatrix[3][1] - greenPos[1], 0.0);
+        glm::vec3 caddyPos = glm::vec3(caddyTranslationMatrix[3][0], caddyTranslationMatrix[3][1], 0.0);
+        setCaddyPos(caddyPos);
         
-        intersectsGreen = vecPolygonIntersect(golferPos, caddyPos, green, greenSize);
-        printf("Intersects green: %s\n", intersectsGreen?"true":"false");
-
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();

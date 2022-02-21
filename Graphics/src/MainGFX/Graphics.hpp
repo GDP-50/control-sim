@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include "controls.hpp"
 #include "parseCourse.hpp"
+#include "UserControls.hpp"
 
 
 namespace gfx {

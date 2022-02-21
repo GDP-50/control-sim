@@ -46,7 +46,7 @@ void loadCourse(const char * path, int &greenSize, int &bunkerCount, int bunkerS
 
 
 
-void prepareCourse(const char * path, GLfloat** green, int greenSize, GLfloat*** bunkers, int bunkerCount, int bunkerSizes[128], GLfloat teePos[3]) {
+void prepareCourse(const char * path, GLfloat** green, int greenSize, GLfloat*** bunkers, int bunkerCount, int bunkerSizes[128], GLfloat teePos[3], GLfloat* scaleVal) {
     FILE* file = fopen(path, "r");
     char lineHeader[128];
     bool bunkerActive = false;
@@ -140,7 +140,7 @@ void prepareCourse(const char * path, GLfloat** green, int greenSize, GLfloat***
             }
         }
     }
-
+    *scaleVal = largestVal;
     //Scale between 0 and 2
     //Then move to between 1 and -1
     for(int i = 0; i < greenSize; i++) {
