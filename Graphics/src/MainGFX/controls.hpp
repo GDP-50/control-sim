@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <math.h>
 #include <stdio.h>
+#include "Polygons.hpp"
 glm::mat4 getTranslationMatrix();
 void calculateTranslation(GLFWwindow* window);
 glm::mat4 getCaddyTranslationMatrix();
@@ -31,6 +32,7 @@ void minMax(GLfloat* v1, GLfloat* v2, GLfloat* min, GLfloat* max);
 void Max(GLfloat* v1, GLfloat* v2, GLfloat* max);
 void Min(GLfloat* v1, GLfloat* v2, GLfloat* min);
 void pathfind(GLfloat gx, GLfloat gy, GLfloat cx, GLfloat cy, GLfloat path[3][2]);
-bool vecPolygonIntersect(glm::vec3 golferPos, glm::vec3 caddyPos, GLfloat** polygon, int n);
-bool segmentIntersection(glm::vec3 golferPos, glm::vec3 caddyPos, int idxI, int IdxIp1, GLfloat** polygon);
+bool vecPolygonIntersect(glm::vec3 point1, glm::vec3 point2, GLfloat** polygon, int n);
+bool segmentIntersection(glm::vec3 point1, glm::vec3 point2, int idxI, int IdxIp1, GLfloat** polygon);
+void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx);
 #endif

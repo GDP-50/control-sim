@@ -12,11 +12,16 @@ glm::mat4 caddyTranslationMatrix;
 glm::mat4 caddyRotationMatrix;
 glm::mat3 caddyRotationMatrix3;
 glm::vec3 caddyDirection = glm::vec3(0, 1, 0);
+glm::vec3 target;
+const glm::vec3 yUnit = glm::vec(0, 1, 0);
+const glm::vec3 zUnit = glm::vec(0, 0, 1);
 double caddyRotation = 0;
 double caddySpeed = 0.02;
 
 bool timerShouldReset = false;
 
+double xIncrement = -1;
+double yIncrement = -1;
 
 glm::mat4 getTranslationMatrix() {
     return translationMatrix;
@@ -218,22 +223,22 @@ void Min(GLfloat* v1, GLfloat* v2, GLfloat* min) {
     *min = (*v1 <= *v2) ? *v1 : *v2; 
 }
 
-bool vecPolygonIntersect(glm::vec3 golferPos, glm::vec3 caddyPos, GLfloat** polygon, int n) {
+bool vecPolygonIntersect(glm::vec3 point1, glm::vec3 point2, GLfloat** polygon, int n) {
     for(int i = 0; i < n - 1; i++) {
-        if(segmentIntersection(golferPos, caddyPos, i, i + 1, polygon)) return true;
+        if(segmentIntersection(point1, point2, i, i + 1, polygon)) return true;
     }
     return false;
 }
 
-bool segmentIntersection(glm::vec3 golferPos, glm::vec3 caddyPos, int idxI, int idxIp1, GLfloat** polygon) {
+bool segmentIntersection(glm::vec3 point1, glm::vec3 point2, int idxI, int idxIp1, GLfloat** polygon) {
     /* Vector a is caddy to golfer, vector b is polygon edge */
     /* x and y are the intersection point of the line segments */
     GLfloat x, y, ax1, ax2, ay1, ay2, bx1, bx2, by1, by2;
     GLfloat grad_a, grad_b;
     GLfloat ac, bc;
     GLfloat minX, maxX, minY, maxY;
-    ax1 = caddyPos.x; ay1 = caddyPos.y;
-    ax2 = golferPos.x; ay2 = golferPos.y;
+    ax1 = point2.x; ay1 = point2.y;
+    ax2 = point1.x; ay2 = point1.y;
     bx1 = polygon[idxI][0]; by1 = polygon[idxI][1];
     bx2 = polygon[idxIp1][0]; by2 = polygon[idxIp1][1];
 
@@ -287,4 +292,72 @@ bool segmentIntersection(glm::vec3 golferPos, glm::vec3 caddyPos, int idxI, int 
     } else {
         return false;
     }
+}
+
+void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx) {
+    if(vecPolygonIntersect(targetPos, caddyPos, polyIdx)) {
+        int n = polyInfo[polyIdx][2];
+        double yDisp, xDisp, theta;
+        glm::vec3 chord, center;
+        glm::vec3 point, rotatedPoint, rcaddyPos, rtargetPos;
+        glm::mat4 rotationMatrix, unRotationMatrix;
+        glm::vec3 a1, a2; 
+        bool yShouldRepeat, xShouldRepeat;
+        GLfloat** rotatedPoly;
+        chord = targetPos - caddyPos;
+        theta = angleBetweenVectors(chord, yUnit);
+        rotationMatrix = glm::mat4(
+                          cos(theta), -sin(theta),  0, 0,
+                          sin(theta), cos(theta),   0, 0,
+                                              0, 0, 1, 0,
+                                              0, 0, 0, 1);
+        rotatedPoly = (GLfloat**)malloc(n * sizeof(GLfloat));
+        /* Transform to new rotated coordinate system for ease */
+        rtargetPos = targetPos * rotationMatrix;
+        rcaddyPos = caddyPos * rotationMatrix;
+        for(int i = 0; i < n; i++) {
+            rotatedPoint = point * rotationMatrix;
+            rotatedPoly[i] = (GLfloat*)malloc(3 * sizeof(GLfloat));
+            rotatedPoly[i][0] = rotatedPoint.x;
+            rotatedPoly[i][1] = rotatedPoint.y;
+            rotatedPoly[i][2] = 0.0;
+        }
+        /* The segment points of horizontal line that we slide down */
+        /* First for Y */
+        yShouldRepeat = true;
+        yDisp = 0.0;
+        a1 = glm::vec3(rcaddyPos.x, rcaddyPos.y + yDisp, 0.0);
+        a2 = glm::vec3(rtargetPos.x, rcaddyPos.y + yDisp, 0.0);
+        while(yShouldRepeat) {
+            while(vecPolygonIntersect(a1, a2, rotatedPoly, n)) {
+                yDisp += yIncrement;
+                a1 = glm::vec3(rcaddyPos.x, rcaddyPos.y + yDisp, 0.0);
+                a2 = glm::vec3(rtargetPos.x, rcaddyPos.y + yDisp, 0.0);
+                center = glm::vec3((a1.x + a2.x) / 2, (a1.y + a2.y) / 2, 0.0);
+            }
+            if(inPolygon(rotatedPoly, n, center)) {
+                yIncrement *= -1;
+                yDisp = 0;
+                a1 = glm::vec3(rcaddyPos.x, rcaddyPos.y + yDisp, 0.0);
+                a2 = glm::vec3(rtargetPos.x, rcaddyPos.y + yDisp, 0.0);
+            } else {
+                yShouldRepeat = false;
+            }
+        }
+        xDisp = 0.0;
+        a1 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y, 0.0);
+        a2 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y + yDisp, 0.0);
+        while(vecPolygonIntersect(a1, a2, rotatedPoly, n)) {
+            xDispt += xIncrement;
+            a1 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y, 0.0);
+            a2 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y + yDisp, 0.0);
+        }
+        unrotationMatrix = glm::mat4(
+                          cos(-theta), -sin(-theta),  0, 0,
+                          sin(-theta), cos(-theta),   0, 0,
+                                              0, 0, 1, 0,
+                                              0, 0, 0, 1);
+        target = glm::vec3(xDisp + rcaddyPos.x, yDisp + rcaddyPos.y, 0.0) * unRotationMatrix;
+    }
+    target = targetPos;
 }
