@@ -10,6 +10,7 @@
 
 GLfloat*** polygons;
 GLfloat** polyInfo;
+int polyCount;
 
 bool gfx::InitialiseGLFW() {
     // Initialise GLFW
@@ -202,7 +203,8 @@ void gfx::Main(GLFWwindow* window) {
     polyInfo[bunkerCount][0] = greenPos[0];
     polyInfo[bunkerCount][1] = greenPos[1];
     polyInfo[bunkerCount][2] = greenSize;
-   
+    polyCount = bunkerCount + 1;
+
    
 
     // Get a handle for our "MVP" uniform
@@ -326,7 +328,6 @@ void gfx::Main(GLFWwindow* window) {
 
         /* Update time */
         updateTime();
-        printf("time is %Lf seconds\n", time_s);
 	} // Check if the ESC key was pressed or the window was closed
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
 		   glfwWindowShouldClose(window) == 0 );

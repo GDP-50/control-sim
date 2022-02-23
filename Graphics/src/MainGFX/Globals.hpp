@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 extern GLfloat*** polygons;
 extern GLfloat** polyInfo;
+extern int polyCount;
 extern long double initialTime_s;
 extern long double time_s;
 #endif

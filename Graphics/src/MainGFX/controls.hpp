@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include "Globals.hpp"
+#include <limits.h>
 glm::mat4 getTranslationMatrix();
 void calculateTranslation(GLFWwindow* window);
 glm::mat4 getCaddyTranslationMatrix();
@@ -38,4 +39,5 @@ bool segmentIntersection(glm::vec3 point1, glm::vec3 point2, int idxI, int IdxIp
 void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx);
 void initTime();
 void updateTime();
+void nearestPolygon(glm::vec3 caddyPos, int* polyIdx);
 #endif

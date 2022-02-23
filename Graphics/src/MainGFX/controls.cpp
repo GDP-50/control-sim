@@ -13,6 +13,7 @@ glm::mat4 caddyRotationMatrix;
 glm::mat3 caddyRotationMatrix3;
 glm::vec3 caddyDirection = glm::vec3(0, 1, 0);
 glm::vec3 target;
+bool activeTarget = false;
 glm::vec3 yUnit = glm::vec3(0, 1, 0);
 glm::vec3 zUnit = glm::vec3(0, 0, 1);
 double caddyRotation = 0;
@@ -24,6 +25,8 @@ long double time_s;
 
 double xIncrement = -1;
 double yIncrement = -1;
+
+int nearestPolyIdx;
 
 glm::mat4 getTranslationMatrix() {
     return translationMatrix;
@@ -104,6 +107,15 @@ void caddyControl() {
     caddyRotation = angle;
     setCaddyRotationMatrix(caddyRotation);
     prevTime = glfwGetTime();
+    nearestPolygon(caddyPos, &nearestPolyIdx);
+
+/*     double pxc = caddyTranslationMatrix[3][0];
+    double pyc = caddyTranslationMatrix[3][1];
+    glm::vec3 caddyPos = glm::vec3(pxc, pyc, 0);
+    if(!activeTarget) {
+        pathFind(caddyPos, golferPos, )
+    }
+ */
 }
 
 void setCaddyRotationMatrix(double theta) {
@@ -359,6 +371,24 @@ void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx) {
         target = glm::vec3(xDisp + rcaddyPos.x, yDisp + rcaddyPos.y, 0.0) * unRotationMatrix;
     }
     target = targetPos;
+}
+
+void nearestPolygon(glm::vec3 caddyPos, int* polyIdx) {
+    double cx, cy, cpx, cpy;
+    double dist, smallestDist;
+    int closestIdx;
+    cpx = (double)caddyPos.x; cpy = (double)caddyPos.y;
+    smallestDist = (double)LONG_MAX; /* max integer of other 64 bit type */
+    for(int i = 0; i < polyCount; i++) {
+        cx = polyInfo[i][0];
+        cy = polyInfo[i][1];
+        dist = sqrt(pow(cx - cpx, 2.0) + pow(cy - cpy, 2.0));
+        if(dist < smallestDist) {
+            closestIdx = i;
+            smallestDist = dist;
+        }
+    }
+    *polyIdx = closestIdx;
 }
 
 void initTime() {
