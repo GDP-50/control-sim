@@ -8,6 +8,8 @@
 
 #include "Graphics.hpp"
 
+GLfloat*** polygons;
+GLfloat** polyInfo;
 
 bool gfx::InitialiseGLFW() {
     // Initialise GLFW
@@ -63,7 +65,7 @@ GLFWwindow* gfx::OpenWindow(const char * windowName, bool &windowOpened) {
 
 void gfx::Main(GLFWwindow* window) {
 
-
+    initTime();
 
     GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -196,9 +198,10 @@ void gfx::Main(GLFWwindow* window) {
        polyInfo[i][2] = bunkerSizes[i];
     }
     polygons[bunkerCount] = green;
-    polyInfo[i][0] = greenPos[0];
-    polyInfo[i][1] = greenPos[1];
-    polyInfo[i][2] = greenSize;
+    polyInfo[bunkerCount] = (GLfloat*)malloc(3 * sizeof(GLfloat));
+    polyInfo[bunkerCount][0] = greenPos[0];
+    polyInfo[bunkerCount][1] = greenPos[1];
+    polyInfo[bunkerCount][2] = greenSize;
    
    
 
@@ -321,6 +324,9 @@ void gfx::Main(GLFWwindow* window) {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
+        /* Update time */
+        updateTime();
+        printf("time is %Lf seconds\n", time_s);
 	} // Check if the ESC key was pressed or the window was closed
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
 		   glfwWindowShouldClose(window) == 0 );

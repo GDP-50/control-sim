@@ -20,7 +20,7 @@
 #include "controls.hpp"
 #include "parseCourse.hpp"
 #include "UserControls.hpp"
-#include "Polygons.hpp"
+#include "Globals.hpp"
 
 
 namespace gfx {

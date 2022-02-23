@@ -13,12 +13,14 @@ glm::mat4 caddyRotationMatrix;
 glm::mat3 caddyRotationMatrix3;
 glm::vec3 caddyDirection = glm::vec3(0, 1, 0);
 glm::vec3 target;
-const glm::vec3 yUnit = glm::vec(0, 1, 0);
-const glm::vec3 zUnit = glm::vec(0, 0, 1);
+glm::vec3 yUnit = glm::vec3(0, 1, 0);
+glm::vec3 zUnit = glm::vec3(0, 0, 1);
 double caddyRotation = 0;
 double caddySpeed = 0.02;
 
 bool timerShouldReset = false;
+long double initialTime_s;
+long double time_s;
 
 double xIncrement = -1;
 double yIncrement = -1;
@@ -170,16 +172,16 @@ glm::mat4 makeTranslationMatrix(GLfloat tx, GLfloat ty) {
     return tm;
 }
 
-bool inPolygon(GLfloat** polygon, int m, glm::vec3 pos) {
+bool inPolygon(glm::vec3 pos, GLfloat** polygon, int n) {
     GLfloat px, py;
     px = pos.x;
     py = pos.y;
     int intersections;
     intersections = 0;
-    for(int i = 0; i < m - 1; i++) {
+    for(int i = 0; i < n - 1; i++) {
         rayCast(polygon, &intersections, i, i + 1, px, py);
     }
-    rayCast(polygon, &intersections, m - 1, 0, px, py);
+    rayCast(polygon, &intersections, n - 1, 0, px, py);
     if(intersections % 2 == 0) {
         return false;
     } else {
@@ -295,22 +297,21 @@ bool segmentIntersection(glm::vec3 point1, glm::vec3 point2, int idxI, int idxIp
 }
 
 void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx) {
-    if(vecPolygonIntersect(targetPos, caddyPos, polyIdx)) {
-        int n = polyInfo[polyIdx][2];
+    GLfloat** polygon = polygons[polyIdx];
+    int n = polyInfo[polyIdx][2];
+    if(vecPolygonIntersect(targetPos, caddyPos, polygon, n)) {
         double yDisp, xDisp, theta;
         glm::vec3 chord, center;
         glm::vec3 point, rotatedPoint, rcaddyPos, rtargetPos;
-        glm::mat4 rotationMatrix, unRotationMatrix;
+        glm::mat3 rotationMatrix, unRotationMatrix;
         glm::vec3 a1, a2; 
         bool yShouldRepeat, xShouldRepeat;
         GLfloat** rotatedPoly;
         chord = targetPos - caddyPos;
         theta = angleBetweenVectors(chord, yUnit);
-        rotationMatrix = glm::mat4(
-                          cos(theta), -sin(theta),  0, 0,
-                          sin(theta), cos(theta),   0, 0,
-                                              0, 0, 1, 0,
-                                              0, 0, 0, 1);
+        rotationMatrix = glm::mat3(cos(theta), -sin(theta),  0,
+                                    sin(theta), cos(theta),   0,
+                                                        0, 0, 1);
         rotatedPoly = (GLfloat**)malloc(n * sizeof(GLfloat));
         /* Transform to new rotated coordinate system for ease */
         rtargetPos = targetPos * rotationMatrix;
@@ -335,7 +336,7 @@ void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx) {
                 a2 = glm::vec3(rtargetPos.x, rcaddyPos.y + yDisp, 0.0);
                 center = glm::vec3((a1.x + a2.x) / 2, (a1.y + a2.y) / 2, 0.0);
             }
-            if(inPolygon(rotatedPoly, n, center)) {
+            if(inPolygon(center, rotatedPoly, n)) {
                 yIncrement *= -1;
                 yDisp = 0;
                 a1 = glm::vec3(rcaddyPos.x, rcaddyPos.y + yDisp, 0.0);
@@ -348,16 +349,26 @@ void pathFind(glm::vec3 caddyPos, glm::vec3 targetPos, int polyIdx) {
         a1 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y, 0.0);
         a2 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y + yDisp, 0.0);
         while(vecPolygonIntersect(a1, a2, rotatedPoly, n)) {
-            xDispt += xIncrement;
+            xDisp += xIncrement;
             a1 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y, 0.0);
             a2 = glm::vec3(rcaddyPos.x + xDisp, rcaddyPos.y + yDisp, 0.0);
         }
-        unrotationMatrix = glm::mat4(
-                          cos(-theta), -sin(-theta),  0, 0,
-                          sin(-theta), cos(-theta),   0, 0,
-                                              0, 0, 1, 0,
-                                              0, 0, 0, 1);
+        unRotationMatrix = glm::mat3(cos(-theta), -sin(-theta),  0,
+                                    sin(-theta), cos(-theta),   0,
+                                                         0, 0, 1);
         target = glm::vec3(xDisp + rcaddyPos.x, yDisp + rcaddyPos.y, 0.0) * unRotationMatrix;
     }
     target = targetPos;
+}
+
+void initTime() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    initialTime_s = (long double)tv.tv_sec + (long double)(tv.tv_usec / 1000000.0);
+}
+
+void updateTime() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    time_s = (long double)tv.tv_sec + (long double)(tv.tv_usec / 1000000.0) - initialTime_s;
 }
